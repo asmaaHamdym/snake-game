@@ -85,6 +85,7 @@ function spawnFood() {
     newFood = {
       x: Math.floor(Math.random() * GRID_SIZE), // Random X between 0-19
       y: Math.floor(Math.random() * GRID_SIZE), // Random Y between 0-19
+      type: Math.floor(Math.random() * 10), // Random fruit type (0-9)
     };
 
     // Check if food overlaps with any snake segment
@@ -103,8 +104,8 @@ function spawnFood() {
 function spawnObstacles() {
   obstacles = []; // Clear existing obstacles
 
-  // Maximum of 2 obstacles at a time (instead of level-based)
-  const obstacleCount = 2;
+  // Random between 2-3 obstacles each game (adds variety)
+  const obstacleCount = 2 + Math.floor(Math.random() * 2); // 2 or 3
 
   for (let i = 0; i < obstacleCount; i++) {
     let newObstacle;
@@ -118,9 +119,8 @@ function spawnObstacles() {
         // Each obstacle gets a DIFFERENT random lifespan for staggered timing
         // Ranges from 100-180 frames (so they disappear at different times)
         lifespan: 100 + Math.floor(Math.random() * 80),
-        // First obstacle appears immediately (spawnDelay = 0)
-        // Second obstacle appears after 80-120 frames delay
-        spawnDelay: i === 0 ? 0 : 80 + Math.floor(Math.random() * 40),
+        // Start with no spawn delay so all obstacles visible from the beginning
+        spawnDelay: 0,
       };
 
       // Check it doesn't overlap with snake, food, or existing obstacles
@@ -371,97 +371,241 @@ function drawGame() {
     }
   });
 
-  // Draw food as a spider
+  // Draw food - 10 different fruit types with good contrast - EXTRA LARGE
   const foodX = food.x * TILE_SIZE + TILE_SIZE / 2;
   const foodY = food.y * TILE_SIZE + TILE_SIZE / 2;
 
-  // Draw outer glow effect for visibility
-  ctx.fillStyle = "rgba(200, 100, 0, 0.3)";
-  ctx.beginPath();
-  ctx.arc(foodX, foodY, 8, 0, Math.PI * 2);
-  ctx.fill();
+  switch (food.type) {
+    case 0: // Red Apple
+      ctx.fillStyle = "#d32f2f";
+      ctx.beginPath();
+      ctx.arc(foodX, foodY, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#1b5e20";
+      ctx.fillRect(foodX - 1.2, foodY - 10, 2.4, 4.5);
+      ctx.fillStyle = "#558b2f";
+      ctx.beginPath();
+      ctx.arc(foodX - 3.5, foodY - 9, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.beginPath();
+      ctx.arc(foodX - 3.5, foodY - 2.2, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      break;
 
-  // Draw 8 spider legs - bright orange/tan
-  ctx.strokeStyle = "#dd8844";
-  ctx.lineWidth = 2;
-  const legLength = 6;
-  const legAngles = [
-    0, // Right
-    Math.PI / 4, // Bottom-right
-    Math.PI / 2, // Down
-    (3 * Math.PI) / 4, // Bottom-left
-    Math.PI, // Left
-    (5 * Math.PI) / 4, // Top-left
-    (3 * Math.PI) / 2, // Up
-    (7 * Math.PI) / 4, // Top-right
-  ];
+    case 1: // Yellow Banana
+      ctx.fillStyle = "#ffeb3b";
+      ctx.strokeStyle = "#f57f17";
+      ctx.lineWidth = 2.5;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.arc(foodX - 5.5 + i * 5.5, foodY - 2.3, 7.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.strokeStyle = "#795548";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(foodX - 9.5, foodY + 4.5);
+      ctx.lineTo(foodX + 9.5, foodY + 4.5);
+      ctx.stroke();
+      break;
 
-  // Draw each of the 8 legs
-  legAngles.forEach((angle) => {
-    const legX = foodX + Math.cos(angle) * 3;
-    const legY = foodY + Math.sin(angle) * 3;
-    const endX = foodX + Math.cos(angle) * (3 + legLength);
-    const endY = foodY + Math.sin(angle) * (3 + legLength);
+    case 2: // Red Strawberry
+      ctx.fillStyle = "#e91e63";
+      ctx.beginPath();
+      ctx.arc(foodX, foodY, 7.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffeb3b";
+      const seedPositions = [
+        [0, 0],
+        [-4.5, -2.3],
+        [4.5, -2.3],
+        [-2.3, 2.3],
+        [2.3, 2.3],
+        [-4.5, 2.3],
+        [4.5, 2.3],
+      ];
+      seedPositions.forEach((pos) => {
+        ctx.beginPath();
+        ctx.arc(foodX + pos[0], foodY + pos[1], 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.fillStyle = "#558b2f";
+      ctx.beginPath();
+      ctx.arc(foodX - 2.3, foodY - 7.5, 2.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(foodX + 2.3, foodY - 7.5, 2.3, 0, Math.PI * 2);
+      ctx.fill();
+      break;
 
-    ctx.beginPath();
-    ctx.moveTo(legX, legY);
-    // Curved leg (spider legs bend)
-    const controlX = foodX + Math.cos(angle) * (3 + legLength / 2);
-    const controlY = foodY + Math.sin(angle) * (3 + legLength / 2) + 2;
-    ctx.quadraticCurveTo(controlX, controlY, endX, endY);
-    ctx.stroke();
-  });
+    case 3: // Orange Orange
+      ctx.fillStyle = "#ff9800";
+      ctx.beginPath();
+      ctx.arc(foodX, foodY, 7.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#e65100";
+      ctx.lineWidth = 2.3;
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(foodX, foodY);
+        ctx.lineTo(
+          foodX + Math.cos(angle) * 7.5,
+          foodY + Math.sin(angle) * 7.5,
+        );
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#558b2f";
+      ctx.beginPath();
+      ctx.arc(foodX, foodY - 7.5, 2.7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.beginPath();
+      ctx.arc(foodX - 3.3, foodY - 2.3, 3.3, 0, Math.PI * 2);
+      ctx.fill();
+      break;
 
-  // Draw abdomen (rear body) - larger circle - bright orange
-  ctx.fillStyle = "#ff9944";
-  ctx.beginPath();
-  ctx.arc(foodX, foodY + 1, 4, 0, Math.PI * 2);
-  ctx.fill();
+    case 4: // Purple Grapes
+      ctx.fillStyle = "#9c27b0";
+      const grapePositions = [
+        [0, 0],
+        [-4.5, -3.3],
+        [4.5, -3.3],
+        [-6.75, 0],
+        [6.75, 0],
+        [-4.5, 3.3],
+        [4.5, 3.3],
+      ];
+      grapePositions.forEach((pos) => {
+        ctx.beginPath();
+        ctx.arc(foodX + pos[0], foodY + pos[1], 4.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.fillStyle = "#795548";
+      ctx.fillRect(foodX - 1.2, foodY - 9, 2.4, 3.3);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.beginPath();
+      ctx.arc(foodX - 2.25, foodY - 1.2, 2.25, 0, Math.PI * 2);
+      ctx.fill();
+      break;
 
-  // Draw abdomen shading/pattern
-  ctx.fillStyle = "#ff6622";
-  ctx.beginPath();
-  ctx.arc(foodX + 1, foodY + 2, 2.5, 0, Math.PI * 2);
-  ctx.fill();
+    case 5: // Green Watermelon
+      ctx.fillStyle = "#4caf50";
+      ctx.beginPath();
+      ctx.arc(foodX, foodY, 7.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ff5252";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(foodX - 4.5, foodY);
+      ctx.lineTo(foodX + 4.5, foodY);
+      ctx.stroke();
+      ctx.strokeStyle = "#ffeb3b";
+      ctx.lineWidth = 1.5;
+      const seedPositions2 = [
+        [-2.25, -2.25],
+        [2.25, -2.25],
+        [-2.25, 2.25],
+        [2.25, 2.25],
+      ];
+      seedPositions2.forEach((pos) => {
+        ctx.beginPath();
+        ctx.arc(foodX + pos[0], foodY + pos[1], 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      break;
 
-  // Draw abdomen highlights
-  ctx.fillStyle = "rgba(255, 200, 100, 0.6)";
-  ctx.beginPath();
-  ctx.arc(foodX - 1.5, foodY - 1, 2, 0, Math.PI * 2);
-  ctx.fill();
+    case 6: // Cherry Red (2 cherries)
+      ctx.fillStyle = "#dc143c";
+      ctx.beginPath();
+      ctx.arc(foodX - 3.3, foodY, 5.25, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(foodX + 3.3, foodY, 5.25, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#8B4513";
+      ctx.lineWidth = 2.25;
+      ctx.beginPath();
+      ctx.moveTo(foodX - 3.3, foodY - 5.25);
+      ctx.lineTo(foodX + 3.3, foodY - 5.25);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.beginPath();
+      ctx.arc(foodX - 2.25, foodY - 2.25, 2.25, 0, Math.PI * 2);
+      ctx.fill();
+      break;
 
-  // Draw cephalothorax (front body/head) - smaller circle - darker orange
-  ctx.fillStyle = "#ff7722";
-  ctx.beginPath();
-  ctx.arc(foodX, foodY - 2, 3, 0, Math.PI * 2);
-  ctx.fill();
+    case 7: // Yellow Pineapple
+      ctx.fillStyle = "#fdd835";
+      ctx.beginPath();
+      ctx.arc(foodX, foodY + 1.2, 7.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#f57f17";
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < 6; i++) {
+        for (let j = 0; j < 6; j++) {
+          ctx.beginPath();
+          ctx.rect(foodX - 6.75 + i * 2.7, foodY - 5.25 + j * 2.7, 2.55, 2.55);
+          ctx.stroke();
+        }
+      }
+      ctx.fillStyle = "#558b2f";
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.arc(foodX - 2.25 + i * 2.25, foodY - 9, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
 
-  // Draw two eyes - bright yellow/green
-  ctx.fillStyle = "#ffff00";
-  ctx.beginPath();
-  ctx.arc(foodX - 1, foodY - 3, 1.2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(foodX + 1, foodY - 3, 1.2, 0, Math.PI * 2);
-  ctx.fill();
+    case 8: // Orange/Yellow Mango
+      ctx.fillStyle = "#fbc02d";
+      ctx.beginPath();
+      ctx.arc(foodX, foodY + 2.25, 6.75, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ff9800";
+      ctx.beginPath();
+      ctx.arc(foodX, foodY + 1.2, 5.7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ff6f00";
+      ctx.beginPath();
+      ctx.arc(foodX, foodY + 2.25, 3.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#8B4513";
+      ctx.lineWidth = 2.25;
+      ctx.beginPath();
+      ctx.moveTo(foodX, foodY - 4.5);
+      ctx.lineTo(foodX + 2.25, foodY - 7.8);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.beginPath();
+      ctx.arc(foodX - 1.2, foodY - 1.2, 3.3, 0, Math.PI * 2);
+      ctx.fill();
+      break;
 
-  // Eye pupils - black
-  ctx.fillStyle = "#000000";
-  ctx.beginPath();
-  ctx.arc(foodX - 1, foodY - 3, 0.6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(foodX + 1, foodY - 3, 0.6, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Eye shine - bright
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.arc(foodX - 0.6, foodY - 3.4, 0.3, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(foodX + 1.4, foodY - 3.4, 0.3, 0, Math.PI * 2);
-  ctx.fill();
+    case 9: // Pink Peach
+      ctx.fillStyle = "#ff69b4";
+      ctx.beginPath();
+      ctx.arc(foodX, foodY, 7.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ff1493";
+      ctx.beginPath();
+      ctx.arc(foodX + 1.2, foodY + 2.25, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#d4af37";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(foodX, foodY, 7.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "#8B4513";
+      ctx.fillRect(foodX - 1.2, foodY - 7.5, 2.4, 2.25);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.beginPath();
+      ctx.arc(foodX - 2.7, foodY - 2.7, 3.3, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+  }
 
   // ========================================
   // OBSTACLE STYLE 5: BOMB/CIRCULAR WITH GRADIENT
