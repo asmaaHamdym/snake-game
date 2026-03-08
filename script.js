@@ -1,21 +1,33 @@
-// Game Constants
-const GRID_SIZE = 20;
-const CANVAS_SIZE = 400;
-const TILE_SIZE = CANVAS_SIZE / GRID_SIZE;
+/**
+ * SNAKE GAME - Classic snake arcade game
+ * Player controls a snake to eat food and grow longer
+ * Game ends when snake hits wall or itself
+ */
 
-// Game Variables
-let snake = [];
-let food = {};
-let score = 0;
-let level = 1;
-let gameSpeed = 5;
-let gameRunning = false;
-let gamePaused = false;
-let direction = { x: 0, y: 0 };
-let nextDirection = { x: 0, y: 0 };
-let gameLoopId = null;
+// ========================================
+// GAME CONSTANTS - Grid and canvas sizing
+// ========================================
+const GRID_SIZE = 20; // 20x20 grid for game board
+const CANVAS_SIZE = 400; // 400x400 pixel canvas
+const TILE_SIZE = CANVAS_SIZE / GRID_SIZE; // Each tile is 20x20 pixels
 
-// DOM Elements
+// ========================================
+// GAME STATE VARIABLES - Track game data
+// ========================================
+let snake = []; // Array of snake segments {x, y}
+let food = {}; // Current food location {x, y}
+let score = 0; // Player score (10 points per food)
+let level = 1; // Game level (increases every 100 points)
+let gameSpeed = 5; // Game speed (updates per second)
+let gameRunning = false; // Is game currently active?
+let gamePaused = false; // Is game paused?
+let direction = { x: 0, y: 0 }; // Current snake direction
+let nextDirection = { x: 0, y: 0 }; // Next direction (from player input)
+let gameLoopId = null; // ID of game loop interval
+
+// ========================================
+// DOM REFERENCES - Get HTML elements
+// ========================================
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const scoreDisplay = document.getElementById("score");
@@ -29,36 +41,49 @@ const restartBtn = document.getElementById("restartBtn");
 const finalScoreDisplay = document.getElementById("finalScore");
 const finalLevelDisplay = document.getElementById("finalLevel");
 
-// Initialize Game
+// ========================================
+// GAME INITIALIZATION
+// ========================================
+// Initialize or reset the game to starting state
 function initializeGame() {
+  // Create initial snake with 3 segments (head at 10,10 moving right)
   snake = [
-    { x: 10, y: 10 },
-    { x: 9, y: 10 },
-    { x: 8, y: 10 },
+    { x: 10, y: 10 }, // Head
+    { x: 9, y: 10 }, // Body segment 1
+    { x: 8, y: 10 }, // Body segment 2
   ];
+
+  // Reset game stats
   score = 0;
   level = 1;
-  gameSpeed = 5;
-  direction = { x: 1, y: 0 };
-  nextDirection = { x: 1, y: 0 };
-  spawnFood();
-  updateUI();
-  gameRunning = false;
-  gamePaused = false;
-  gameOverModal.classList.add("hidden");
+  gameSpeed = 5; // Start at speed 5
+  direction = { x: 1, y: 0 }; // Start moving right
+  nextDirection = { x: 1, y: 0 }; // Queue same direction
+
+  // Prepare game
+  spawnFood(); // Place first food
+  updateUI(); // Update score display
+  gameRunning = false; // Game not started yet
+  gamePaused = false; // Not paused
+  gameOverModal.classList.add("hidden"); // Hide game over screen
 }
 
-// Spawn Food
+// ========================================
+// FOOD SPAWNING
+// ========================================
+// Generate random food location that doesn't overlap with snake
 function spawnFood() {
   let newFood;
   let foodOnSnake = true;
 
+  // Keep generating random positions until we find one not on snake
   while (foodOnSnake) {
     newFood = {
-      x: Math.floor(Math.random() * GRID_SIZE),
-      y: Math.floor(Math.random() * GRID_SIZE),
+      x: Math.floor(Math.random() * GRID_SIZE), // Random X between 0-19
+      y: Math.floor(Math.random() * GRID_SIZE), // Random Y between 0-19
     };
 
+    // Check if food overlaps with any snake segment
     foodOnSnake = snake.some(
       (segment) => segment.x === newFood.x && segment.y === newFood.y,
     );
@@ -67,71 +92,91 @@ function spawnFood() {
   food = newFood;
 }
 
-// Update Game State
+// ========================================
+// GAME LOGIC - Update game state each frame
+// ========================================
+// Process one game tick: move snake, check collisions, handle food
 function updateGame() {
+  // Skip update if game not running or paused
   if (!gameRunning || gamePaused) return;
 
-  // Update direction
+  // Update direction based on player input from last frame
   direction = { ...nextDirection };
 
-  // Calculate new head position
+  // Calculate new head position based on current direction
   const head = { ...snake[0] };
-  head.x += direction.x;
-  head.y += direction.y;
+  head.x += direction.x; // -1, 0, or 1 for left/none/right
+  head.y += direction.y; // -1, 0, or 1 for up/none/down
 
-  // Check wall collision
+  // COLLISION CHECK 1: Wall collision (snake hit boundary)
   if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
-    endGame();
+    endGame(); // Game over!
     return;
   }
 
-  // Check self collision
+  // COLLISION CHECK 2: Self collision (snake hit its own body)
   if (snake.some((segment) => segment.x === head.x && segment.y === head.y)) {
-    endGame();
+    endGame(); // Game over!
     return;
   }
 
-  // Add new head
+  // No collision - move snake by adding new head
   snake.unshift(head);
 
-  // Check food collision
+  // COLLISION CHECK 3: Food collision
   if (head.x === food.x && head.y === food.y) {
-    score += 10;
-    spawnFood();
-    checkLevelUp();
+    // Snake ate food - grow and gain points
+    score += 10; // Add 10 points
+    spawnFood(); // Create new food
+    checkLevelUp(); // Check if score triggers level increase
   } else {
-    // Remove tail if no food eaten
+    // No food eaten - remove tail to maintain snake length
     snake.pop();
   }
 
+  // Update UI display (score, level, speed)
   updateUI();
 }
 
-// Check if level should increase
+// ========================================
+// LEVEL & DIFFICULTY PROGRESSION
+// ========================================
+// Check if player earned enough points for next level and increase speed
 function checkLevelUp() {
+  // Calculate new level: 100 points = level 1, 200 points = level 2, etc
   const newLevel = Math.floor(score / 100) + 1;
+
   if (newLevel > level) {
+    // Level up!
     level = newLevel;
+
+    // Increase game speed: level 1 = speed 5, level 2 = speed 7, level 3 = speed 9, etc
     gameSpeed = 5 + (level - 1) * 2;
+
+    // Restart game loop with new speed
     if (gameLoopId) {
-      clearInterval(gameLoopId);
+      clearInterval(gameLoopId); // Stop old game loop
       gameLoopId = setInterval(() => {
-        updateGame();
-        drawGame();
-      }, 1000 / gameSpeed);
+        updateGame(); // Run game logic
+        drawGame(); // Render graphics
+      }, 1000 / gameSpeed); // Time between frames based on speed
     }
   }
 }
 
-// Draw Game
+// ========================================
+// GRAPHICS RENDERING
+// ========================================
+// Draw all game elements: snake, food, grid
 function drawGame() {
-  // Clear canvas
+  // Fill entire canvas with black background
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
-  // Draw grid (optional)
-  ctx.strokeStyle = "#1a1a1a";
+  // Draw optional grid lines for visual reference
+  ctx.strokeStyle = "#1a1a1a"; // Dark gray
   ctx.lineWidth = 0.5;
+  // Draw vertical and horizontal lines for each grid cell
   for (let i = 0; i <= GRID_SIZE; i++) {
     ctx.beginPath();
     ctx.moveTo(i * TILE_SIZE, 0);
@@ -144,13 +189,13 @@ function drawGame() {
     ctx.stroke();
   }
 
-  // Draw snake
+  // Draw snake body - lighter green for head, darker for body
   snake.forEach((segment, index) => {
     if (index === 0) {
-      // Head - brighter color
+      // First segment is head - bright green
       ctx.fillStyle = "#00ff00";
     } else {
-      // Body - slightly darker
+      // Body segments - darker green
       ctx.fillStyle = "#00cc00";
     }
 
@@ -161,11 +206,13 @@ function drawGame() {
       TILE_SIZE - 2,
     );
 
-    // Draw eyes on head
+    // Draw eyes on snake head to show direction
     if (index === 0) {
-      ctx.fillStyle = "#000";
-      const eyeSize = 2;
+      ctx.fillStyle = "#000"; // Black eyes
+      const eyeSize = 2; // 2x2 pixel eyes
+      // Change eye position based on movement direction
       if (direction.x === 1) {
+        // Moving right
         ctx.fillRect(
           segment.x * TILE_SIZE + 12,
           segment.y * TILE_SIZE + 6,
@@ -221,145 +268,189 @@ function drawGame() {
     }
   });
 
-  // Draw food
-  ctx.fillStyle = "#ff4444";
+  // Draw food as red circle
+  ctx.fillStyle = "#ff4444"; // Red-ish fill
   ctx.beginPath();
+  // Draw circle at food location (center of tile)
   ctx.arc(
-    food.x * TILE_SIZE + TILE_SIZE / 2,
-    food.y * TILE_SIZE + TILE_SIZE / 2,
-    TILE_SIZE / 2 - 2,
+    food.x * TILE_SIZE + TILE_SIZE / 2, // Center X
+    food.y * TILE_SIZE + TILE_SIZE / 2, // Center Y
+    TILE_SIZE / 2 - 2, // Radius
     0,
-    Math.PI * 2,
+    Math.PI * 2, // Full circle
   );
-  ctx.fill();
+  ctx.fill(); // Fill circle
 
-  // Draw food outline
+  // Draw bright red outline around food
   ctx.strokeStyle = "#ff0000";
   ctx.lineWidth = 2;
-  ctx.stroke();
+  ctx.stroke(); // Draw outline
 }
 
-// Update UI
+// ========================================
+// USER INTERFACE UPDATES
+// ========================================
+// Update on-screen stats (score, level, speed)
 function updateUI() {
-  scoreDisplay.textContent = score;
-  levelDisplay.textContent = level;
-  speedDisplay.textContent = gameSpeed;
+  scoreDisplay.textContent = score; // Update score display
+  levelDisplay.textContent = level; // Update level display
+  speedDisplay.textContent = gameSpeed; // Update speed display
 }
 
-// End Game
+// ========================================
+// GAME OVER LOGIC
+// ========================================
+// Stop game and show game over screen
 function endGame() {
-  gameRunning = false;
-  gamePaused = false;
-  clearInterval(gameLoopId);
+  gameRunning = false; // Stop game loop
+  gamePaused = false; // Reset pause state
+  clearInterval(gameLoopId); // Stop game loop interval
+
+  // Show final stats in game over modal
   finalScoreDisplay.textContent = score;
   finalLevelDisplay.textContent = level;
-  gameOverModal.classList.remove("hidden");
-  startBtn.disabled = false;
-  pauseBtn.disabled = true;
+  gameOverModal.classList.remove("hidden"); // Show modal
+
+  // Update button states
+  startBtn.disabled = false; // Allow restart
+  pauseBtn.disabled = true; // Disable pause
 }
 
-// Start Game
+// ========================================
+// START GAME
+// ========================================
+// Begin or resume the game
 function startGame() {
-  if (gameRunning) return;
+  if (gameRunning) return; // Already running, exit
 
-  gameRunning = true;
-  gamePaused = false;
-  startBtn.disabled = true;
-  pauseBtn.disabled = false;
-  gameOverModal.classList.add("hidden");
+  // Set game state
+  gameRunning = true; // Activate game
+  gamePaused = false; // Resume if paused
+  startBtn.disabled = true; // Disable start button
+  pauseBtn.disabled = false; // Enable pause button
+  gameOverModal.classList.add("hidden"); // Hide game over screen
 
+  // Start game loop - update and draw repeatedly
   gameLoopId = setInterval(() => {
-    updateGame();
-    drawGame();
-  }, 1000 / gameSpeed);
+    updateGame(); // Run game logic
+    drawGame(); // Render frame
+  }, 1000 / gameSpeed); // Calculate interval from speed
 
+  // Draw initial frame
   drawGame();
 }
 
-// Toggle Pause
+// ========================================
+// PAUSE/RESUME
+// ========================================
+// Pause or resume the running game
 function togglePause() {
-  if (!gameRunning) return;
+  if (!gameRunning) return; // Can't pause if not running
 
-  gamePaused = !gamePaused;
+  gamePaused = !gamePaused; // Toggle pause state
+  // Update button text to show action
   pauseBtn.textContent = gamePaused ? "Resume" : "Pause";
 }
 
-// Reset Game
+// ========================================
+// RESET GAME
+// ========================================
+// Reset game to initial state
 function resetGame() {
-  clearInterval(gameLoopId);
-  initializeGame();
-  drawGame();
-  startBtn.disabled = false;
-  pauseBtn.disabled = true;
-  pauseBtn.textContent = "Pause";
-  gameOverModal.classList.add("hidden");
+  clearInterval(gameLoopId); // Stop game loop
+  initializeGame(); // Reset all variables
+  drawGame(); // Render initial state
+
+  // Reset button states
+  startBtn.disabled = false; // Allow starting
+  pauseBtn.disabled = true; // Disable pause
+  pauseBtn.textContent = "Pause"; // Reset button text
+  gameOverModal.classList.add("hidden"); // Hide game over
 }
 
-// Event Listeners
-startBtn.addEventListener("click", startGame);
-pauseBtn.addEventListener("click", togglePause);
-resetBtn.addEventListener("click", resetGame);
+// ========================================
+// EVENT LISTENERS - Button Controls
+// ========================================
+startBtn.addEventListener("click", startGame); // Start game button
+pauseBtn.addEventListener("click", togglePause); // Pause game button
+resetBtn.addEventListener("click", resetGame); // Reset game button
 restartBtn.addEventListener("click", () => {
-  resetGame();
-  startGame();
+  // Game over modal restart button
+  resetGame(); // Reset
+  startGame(); // And immediately start
 });
 
-// Keyboard Controls
+// ========================================
+// KEYBOARD INPUT HANDLING
+// ========================================
+// Listen for keyboard input to control snake
 document.addEventListener("keydown", (event) => {
   const key = event.key;
 
-  // Arrow key controls
+  // Arrow key controls - queue next direction
+  // Prevent 180-degree turns (e.g., can't go right if already going left)
   if (key === "ArrowUp" && direction.y === 0) {
-    nextDirection = { x: 0, y: -1 };
+    nextDirection = { x: 0, y: -1 }; // Move up
   } else if (key === "ArrowDown" && direction.y === 0) {
-    nextDirection = { x: 0, y: 1 };
+    nextDirection = { x: 0, y: 1 }; // Move down
   } else if (key === "ArrowLeft" && direction.x === 0) {
-    nextDirection = { x: -1, y: 0 };
+    nextDirection = { x: -1, y: 0 }; // Move left
   } else if (key === "ArrowRight" && direction.x === 0) {
-    nextDirection = { x: 1, y: 0 };
+    nextDirection = { x: 1, y: 0 }; // Move right
   }
 
-  // Spacebar to start/pause
+  // Spacebar to start/pause game
   if (key === " ") {
-    event.preventDefault();
+    event.preventDefault(); // Stop spacebar from scrolling
     if (!gameRunning) {
-      startGame();
+      startGame(); // Start a new game
     } else {
-      togglePause();
+      togglePause(); // Pause or resume
     }
   }
 });
 
-// Mouse/Touch Controls (click on canvas regions)
+// ========================================
+// MOUSE/TOUCH INPUT HANDLING
+// ========================================
+// Alternative control: click canvas regions to change direction
 canvas.addEventListener("click", (event) => {
+  // Click to start if not running
   if (!gameRunning) {
     startGame();
     return;
   }
 
+  // Get click position relative to canvas
   const rect = canvas.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
   const centerX = rect.width / 2;
   const centerY = rect.height / 2;
 
-  // Determine which direction was clicked
-  const dx = x - centerX;
-  const dy = y - centerY;
+  // Calculate distance from center in each axis
+  const dx = x - centerX; // Distance left/right
+  const dy = y - centerY; // Distance up/down
 
+  // Determine which region was clicked
   if (Math.abs(dx) > Math.abs(dy)) {
-    // Horizontal click
-    if (dx > 0 && direction.x === 0) nextDirection = { x: 1, y: 0 };
-    else if (dx < 0 && direction.x === 0) nextDirection = { x: -1, y: 0 };
+    // Horizontal region - left/right click
+    if (dx > 0 && direction.x === 0)
+      nextDirection = { x: 1, y: 0 }; // Right
+    else if (dx < 0 && direction.x === 0) nextDirection = { x: -1, y: 0 }; // Left
   } else {
-    // Vertical click
-    if (dy > 0 && direction.y === 0) nextDirection = { x: 0, y: 1 };
-    else if (dy < 0 && direction.y === 0) nextDirection = { x: 0, y: -1 };
+    // Vertical region - up/down click
+    if (dy > 0 && direction.y === 0)
+      nextDirection = { x: 0, y: 1 }; // Down
+    else if (dy < 0 && direction.y === 0) nextDirection = { x: 0, y: -1 }; // Up
   }
 });
 
-// Initialize on page load
+// ========================================
+// PAGE INITIALIZATION
+// ========================================
+// Initialize game when page loads
 window.addEventListener("load", () => {
-  initializeGame();
-  drawGame();
+  initializeGame(); // Set up initial game state
+  drawGame(); // Render starting screen
 });

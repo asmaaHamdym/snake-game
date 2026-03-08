@@ -1,19 +1,30 @@
+/* ====================================== 
+   GLOBAL STYLES - Reset defaults
+   ====================================== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* ====================================== 
+   BODY - Main page background and layout
+   ====================================== */
 body {
     font-family: 'Arial', sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* Purple gradient */
     min-height: 100vh;
     display: flex;
+    /* Center content */
     align-items: center;
     justify-content: center;
     color: #333;
 }
 
+/* ====================================== 
+   CONTAINER - Main game card
+   ====================================== */
 .container {
     background: white;
     border-radius: 15px;
@@ -23,12 +34,16 @@ body {
     width: 100%;
 }
 
+/* Page title styling */
 h1 {
     text-align: center;
     margin-bottom: 20px;
     color: #667eea;
 }
 
+/* ====================================== 
+   STATS SECTION - Display score, level, speed
+   ====================================== */
 .stats {
     display: flex;
     justify-content: space-around;
@@ -38,6 +53,7 @@ h1 {
     border-radius: 10px;
 }
 
+/* Individual stat item (score/level/speed) */
 .stat-item {
     display: flex;
     flex-direction: column;
@@ -45,6 +61,7 @@ h1 {
     gap: 5px;
 }
 
+/* Stat labels (Score, Level, Speed) */
 .stat-label {
     font-size: 12px;
     color: #666;
@@ -52,32 +69,44 @@ h1 {
     text-transform: uppercase;
 }
 
+/* Stat numbers (score value, level value, etc) */
 .stat-value {
     font-size: 24px;
     font-weight: bold;
     color: #667eea;
 }
 
+/* ====================================== 
+   GAME CANVAS - Main game drawing area
+   ====================================== */
 #gameCanvas {
     display: block;
     margin: 20px auto;
     background: #000;
+    /* Black game board */
     border: 3px solid #667eea;
+    /* Purple border */
     border-radius: 10px;
     cursor: pointer;
+    /* Clickable for mobile controls */
 }
 
+/* ====================================== 
+   CONTROLS SECTION - Instructions and buttons
+   ====================================== */
 .controls {
     text-align: center;
     margin-top: 20px;
 }
 
+/* Instruction text */
 .instruction {
     font-size: 14px;
     color: #666;
     margin-bottom: 15px;
 }
 
+/* Button container layout */
 .button-group {
     display: flex;
     gap: 10px;
@@ -85,6 +114,10 @@ h1 {
     flex-wrap: wrap;
 }
 
+/* ====================================== 
+   BUTTONS - All button styles
+   ====================================== */
+/* Base button styles */
 .btn {
     padding: 10px 20px;
     border: none;
@@ -93,8 +126,10 @@ h1 {
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
+    /* Smooth animations */
 }
 
+/* Primary button (Start/Restart) - Blue */
 .btn-primary {
     background: #667eea;
     color: white;
@@ -103,6 +138,7 @@ h1 {
 .btn-primary:hover:not(:disabled) {
     background: #5568d3;
     transform: translateY(-2px);
+    /* Lift up on hover */
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
@@ -111,6 +147,7 @@ h1 {
     cursor: not-allowed;
 }
 
+/* Secondary button (Pause) - Green */
 .btn-secondary {
     background: #48bb78;
     color: white;
@@ -127,6 +164,7 @@ h1 {
     cursor: not-allowed;
 }
 
+/* Danger button (Reset) - Red */
 .btn-danger {
     background: #f56565;
     color: white;
@@ -138,6 +176,10 @@ h1 {
     box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
 }
 
+/* ====================================== 
+   GAME OVER MODAL - Shows when game ends
+   ====================================== */
+/* Modal overlay - full screen dark background */
 .modal {
     position: fixed;
     top: 0;
@@ -145,16 +187,20 @@ h1 {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
+    /* Semi-transparent black */
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    /* Above all other elements */
 }
 
+/* Hide modal by default */
 .modal.hidden {
     display: none;
 }
 
+/* Modal content box */
 .modal-content {
     background: white;
     padding: 40px;
@@ -163,43 +209,55 @@ h1 {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
+/* Modal heading */
 .modal-content h2 {
     color: #667eea;
     margin-bottom: 20px;
     font-size: 32px;
 }
 
+/* Modal text */
 .modal-content p {
     font-size: 18px;
     color: #333;
     margin-bottom: 10px;
 }
 
+/* Score/level values in modal */
 .modal-content span {
     font-weight: bold;
     color: #667eea;
 }
 
+/* Button inside modal */
 .modal-content .btn {
     margin-top: 20px;
 }
 
+/* ====================================== 
+   MOBILE RESPONSIVE - Adjust for small screens
+   ====================================== */
 @media (max-width: 600px) {
+
+    /* Reduce padding on smaller screens */
     .container {
         padding: 20px;
     }
 
+    /* Make canvas responsive */
     #gameCanvas {
         width: 100%;
         height: auto;
         max-width: 300px;
     }
 
+    /* Tighten stats spacing */
     .stats {
         gap: 10px;
         padding: 10px;
     }
 
+    /* Smaller stat numbers */
     .stat-value {
         font-size: 18px;
     }

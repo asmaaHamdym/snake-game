@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <!-- Document encoding and viewport for responsive design -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snake Game</title>
@@ -9,28 +10,34 @@
 </head>
 
 <body>
+    <!-- Main container - holds all game content -->
     <div class="container">
         <h1>🐍 Snake Game</h1>
 
+        <!-- Player stats display (score, level, speed) -->
         <div class="stats">
             <div class="stat-item">
                 <span class="stat-label">Score:</span>
-                <span class="stat-value" id="score">0</span>
+                <span class="stat-value" id="score">0</span> <!-- Updated by JavaScript -->
             </div>
             <div class="stat-item">
                 <span class="stat-label">Level:</span>
-                <span class="stat-value" id="level">1</span>
+                <span class="stat-value" id="level">1</span> <!-- Updated by JavaScript -->
             </div>
             <div class="stat-item">
                 <span class="stat-label">Speed:</span>
-                <span class="stat-value" id="speed">5</span>
+                <span class="stat-value" id="speed">5</span> <!-- Updated by JavaScript -->
             </div>
         </div>
 
+        <!-- Game canvas (400x400 pixel drawing area) -->
         <canvas id="gameCanvas" width="400" height="400"></canvas>
 
+        <!-- Control section with instructions and buttons -->
         <div class="controls">
+            <!-- Instructions for player -->
             <p id="instruction" class="instruction">Use Arrow Keys to move - SPACEBAR to Start/Pause</p>
+            <!-- Control buttons -->
             <div class="button-group">
                 <button id="startBtn" class="btn btn-primary">Start Game</button>
                 <button id="pauseBtn" class="btn btn-secondary" disabled>Pause</button>
@@ -38,16 +45,20 @@
             </div>
         </div>
 
-        <div id="gameOverModal" class="modal hidden">
+        <!-- Game over modal - shown when game ends -->
+        <div id="gameOverModal" class="modal hidden"> <!-- Hidden by default, shown by JavaScript -->
             <div class="modal-content">
                 <h2>Game Over!</h2>
+                <!-- Display final stats when game ends -->
                 <p>Final Score: <span id="finalScore">0</span></p>
                 <p>Final Level: <span id="finalLevel">1</span></p>
+                <!-- Restart button -->
                 <button id="restartBtn" class="btn btn-primary">Play Again</button>
             </div>
         </div>
     </div>
 
+    <!-- Game logic script -->
     <script src="script.js"></script>
 </body>
 
