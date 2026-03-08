@@ -18,7 +18,7 @@ let snake = []; // Array of snake segments {x, y}
 let food = {}; // Current food location {x, y}
 let score = 0; // Player score (10 points per food)
 let level = 1; // Game level (increases every 100 points)
-let gameSpeed = 5; // Game speed (updates per second)
+let gameSpeed = 3; // Game speed (updates per second)
 let gameRunning = false; // Is game currently active?
 let gamePaused = false; // Is game paused?
 let direction = { x: 0, y: 0 }; // Current snake direction
@@ -58,7 +58,7 @@ function initializeGame() {
   // Reset game stats
   score = 0;
   level = 1;
-  gameSpeed = 5; // Start at speed 5
+  gameSpeed = 3; // Start at speed 3
   direction = { x: 1, y: 0 }; // Start moving right
   nextDirection = { x: 1, y: 0 }; // Queue same direction
   animationFrame = 0; // Reset animation for pulsing effects
@@ -103,8 +103,8 @@ function spawnFood() {
 function spawnObstacles() {
   obstacles = []; // Clear existing obstacles
 
-  // Number of obstacles increases with level (3 at level 1, up to 8 max)
-  const obstacleCount = Math.min(level + 2, 8);
+  // Maximum of 2 obstacles at a time (instead of level-based)
+  const obstacleCount = 2;
 
   for (let i = 0; i < obstacleCount; i++) {
     let newObstacle;
@@ -115,6 +115,12 @@ function spawnObstacles() {
       newObstacle = {
         x: Math.floor(Math.random() * GRID_SIZE),
         y: Math.floor(Math.random() * GRID_SIZE),
+        // Each obstacle gets a DIFFERENT random lifespan for staggered timing
+        // Ranges from 100-180 frames (so they disappear at different times)
+        lifespan: 100 + Math.floor(Math.random() * 80),
+        // First obstacle appears immediately (spawnDelay = 0)
+        // Second obstacle appears after 80-120 frames delay
+        spawnDelay: i === 0 ? 0 : 80 + Math.floor(Math.random() * 40),
       };
 
       // Check it doesn't overlap with snake, food, or existing obstacles
@@ -135,12 +141,55 @@ function spawnObstacles() {
 }
 
 // ========================================
+// RESPAWN OBSTACLE AT NEW LOCATION
+// ========================================
+// Move an obstacle to a new random position
+function respawnObstacle(obstacle) {
+  let isValid = false;
+
+  // Keep trying positions until we find one that doesn't overlap
+  while (!isValid) {
+    obstacle.x = Math.floor(Math.random() * GRID_SIZE);
+    obstacle.y = Math.floor(Math.random() * GRID_SIZE);
+    // Each respawn gets a NEW random lifespan for independent timing
+    obstacle.lifespan = 100 + Math.floor(Math.random() * 80);
+    // Respawned obstacles have a delay before appearing (80-120 frames)
+    obstacle.spawnDelay = 80 + Math.floor(Math.random() * 40);
+
+    // Check it doesn't overlap with snake, food, or other obstacles
+    const overlapsSnake = snake.some(
+      (segment) => segment.x === obstacle.x && segment.y === obstacle.y,
+    );
+    const overlapsFood = food && food.x === obstacle.x && food.y === obstacle.y;
+    const overlapsOtherObstacle = obstacles.some(
+      (obs) => obs !== obstacle && obs.x === obstacle.x && obs.y === obstacle.y,
+    );
+
+    isValid = !overlapsSnake && !overlapsFood && !overlapsOtherObstacle;
+  }
+}
+
+// ========================================
 // GAME LOGIC - Update game state each frame
 // ========================================
 // Process one game tick: move snake, check collisions, handle food
 function updateGame() {
   // Skip update if game not running or paused
   if (!gameRunning || gamePaused) return;
+
+  // Update obstacle lifespans - make obstacles disappear and respawn
+  obstacles.forEach((obstacle) => {
+    // Decrement spawn delay (delay before obstacle appears)
+    if (obstacle.spawnDelay > 0) {
+      obstacle.spawnDelay--;
+    } else {
+      // Only decrement lifespan if obstacle is visible
+      obstacle.lifespan--;
+      if (obstacle.lifespan <= 0) {
+        respawnObstacle(obstacle); // Respawn at new location
+      }
+    }
+  });
 
   // Update direction based on player input from last frame
   direction = { ...nextDirection };
@@ -163,7 +212,11 @@ function updateGame() {
   }
 
   // COLLISION CHECK 3: Obstacle collision (snake hit obstacle)
-  if (obstacles.some((obs) => obs.x === head.x && obs.y === head.y)) {
+  if (
+    obstacles.some(
+      (obs) => obs.spawnDelay <= 0 && obs.x === head.x && obs.y === head.y,
+    )
+  ) {
     endGame(); // Game over!
     return;
   }
@@ -198,8 +251,8 @@ function checkLevelUp() {
     // Level up!
     level = newLevel;
 
-    // Increase game speed: level 1 = speed 5, level 2 = speed 7, level 3 = speed 9, etc
-    gameSpeed = 5 + (level - 1) * 2;
+    // Increase game speed: level 1 = speed 3, level 2 = speed 5, level 3 = speed 7, etc
+    gameSpeed = 3 + (level - 1) * 2;
 
     // Restart game loop with new speed
     if (gameLoopId) {
@@ -417,9 +470,27 @@ function drawGame() {
   // ========================================
   // Draw obstacles as round bombs with glossy gradient effect
   obstacles.forEach((obstacle) => {
+    // Skip drawing if obstacle is still in spawn delay (not yet visible)
+    if (obstacle.spawnDelay > 0) {
+      return; // Don't draw this obstacle yet
+    }
+
     const centerX = obstacle.x * TILE_SIZE + TILE_SIZE / 2;
     const centerY = obstacle.y * TILE_SIZE + TILE_SIZE / 2;
     const radius = (TILE_SIZE - 4) / 2;
+
+    // Calculate fading based on lifespan
+    // At full lifespan (180), opacity = 1.0
+    // At 0 lifespan, opacity = 0.3 (almost gone)
+    const maxLifespan = 180; // Maximum lifespan range (100-180)
+    const opacity = 0.3 + (obstacle.lifespan / maxLifespan) * 0.7;
+
+    // Calculate warning color based on lifespan (gets more yellow/orange as time runs out)
+    let colorIntensity = obstacle.lifespan / maxLifespan;
+    if (colorIntensity < 0.3) {
+      // Warning: flash bright orange/yellow when about to disappear
+      colorIntensity = 0.5 + Math.sin(animationFrame * 0.3) * 0.3;
+    }
 
     // Draw main bomb body with radial gradient (glossy sphere effect)
     const gradient = ctx.createRadialGradient(
@@ -430,9 +501,18 @@ function drawGame() {
       centerY,
       radius,
     );
-    gradient.addColorStop(0, "#ff6666"); // Bright red in center
-    gradient.addColorStop(0.6, "#dd2222"); // Medium red middle
-    gradient.addColorStop(1, "#aa0000"); // Dark red edges
+
+    // Interpolate colors: red normally → orange/yellow when low
+    const brightColor = `rgba(${255}, ${Math.floor(100 * colorIntensity)}, ${Math.floor(100 * colorIntensity)}, ${opacity})`;
+    gradient.addColorStop(0, brightColor); // Bright color in center
+    gradient.addColorStop(
+      0.6,
+      `rgba(${Math.floor(221 * colorIntensity)}, ${34}, ${34}, ${opacity})`,
+    ); // Medium
+    gradient.addColorStop(
+      1,
+      `rgba(${Math.floor(170 * colorIntensity)}, 0, 0, ${opacity})`,
+    ); // Dark edges
 
     ctx.fillStyle = gradient;
     ctx.beginPath();
@@ -440,33 +520,37 @@ function drawGame() {
     ctx.fill();
 
     // Draw bright glossy highlight on top-left
-    ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.4 * opacity})`;
     ctx.beginPath();
     ctx.arc(centerX - 3, centerY - 3, radius * 0.4, 0, Math.PI * 2);
     ctx.fill();
 
     // Draw secondary dimmer highlight
-    ctx.fillStyle = "rgba(255, 150, 150, 0.2)";
+    ctx.fillStyle = `rgba(255, 150, 150, ${0.2 * opacity})`;
     ctx.beginPath();
     ctx.arc(centerX + 2, centerY - 2, radius * 0.3, 0, Math.PI * 2);
     ctx.fill();
 
     // Draw dark border with glow effect
-    ctx.strokeStyle = "#330000";
+    ctx.strokeStyle = `rgba(51, 0, 0, ${opacity})`;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Draw outer glow ring
-    ctx.strokeStyle = "rgba(255, 68, 68, 0.5)";
+    // Draw outer glow ring - changes color as lifespan decreases
+    const glowColor =
+      obstacle.lifespan < 50
+        ? `rgba(255, 200, 0, ${opacity * 0.8})` // Yellow warning (30% of max lifespan)
+        : `rgba(255, 68, 68, ${opacity * 0.5})`; // Normal red
+    ctx.strokeStyle = glowColor;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius + 2, 0, Math.PI * 2);
     ctx.stroke();
 
     // Add small "fuse" on top of bomb
-    ctx.strokeStyle = "#333333";
+    ctx.strokeStyle = `rgba(51, 51, 51, ${opacity})`;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(centerX, centerY - radius);
