@@ -21,14 +21,14 @@ A classic snake game implementation in HTML5 Canvas with JavaScript. The game fe
 2. Click "Start Game" or press Spacebar
 3. Use Arrow Keys to control the snake
 4. Eat the red circles to grow and earn points
-5. Avoid hitting walls and your own tail
+5. Avoid hitting obstacles and your own tail
 
 ## Game Rules
 
 - The snake automatically moves forward in the current direction
-- Change direction using arrow keys
+- Change direction using arrow keys or swipes on touch screens
 - Eating food adds 10 points and makes the snake grow longer
-- The game ends when you hit a wall or collide with your own body
+- The game ends when you hit an obstacle or collide with your own body
 - Speed increases with each level (every 100 points = 1 level)
 
 ## Controls
@@ -52,7 +52,7 @@ A classic snake game implementation in HTML5 Canvas with JavaScript. The game fe
 
 - **Score**: Points earned (10 per food item)
 - **Level**: Current level (increases every 100 points)
-- **Speed**: Current game speed (increases with level)
+- **Speed**: Current game speed (increases with level ans starts at 3 so it's not too slow!)
 
 ## Tips
 
