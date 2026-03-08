@@ -24,6 +24,7 @@ let gamePaused = false; // Is game paused?
 let direction = { x: 0, y: 0 }; // Current snake direction
 let nextDirection = { x: 0, y: 0 }; // Next direction (from player input)
 let gameLoopId = null; // ID of game loop interval
+let obstacles = []; // Array of obstacle positions {x, y}
 
 // ========================================
 // DOM REFERENCES - Get HTML elements
@@ -62,6 +63,7 @@ function initializeGame() {
 
   // Prepare game
   spawnFood(); // Place first food
+  spawnObstacles(); // Generate obstacles
   updateUI(); // Update score display
   gameRunning = false; // Game not started yet
   gamePaused = false; // Not paused
@@ -93,6 +95,44 @@ function spawnFood() {
 }
 
 // ========================================
+// OBSTACLE SPAWNING
+// ========================================
+// Generate obstacles that snake must avoid
+function spawnObstacles() {
+  obstacles = []; // Clear existing obstacles
+
+  // Number of obstacles increases with level (3 at level 1, up to 8 max)
+  const obstacleCount = Math.min(level + 2, 8);
+
+  for (let i = 0; i < obstacleCount; i++) {
+    let newObstacle;
+    let isValid = false;
+
+    // Keep trying positions until we find one that doesn't overlap
+    while (!isValid) {
+      newObstacle = {
+        x: Math.floor(Math.random() * GRID_SIZE),
+        y: Math.floor(Math.random() * GRID_SIZE),
+      };
+
+      // Check it doesn't overlap with snake, food, or existing obstacles
+      const overlapsSnake = snake.some(
+        (segment) => segment.x === newObstacle.x && segment.y === newObstacle.y,
+      );
+      const overlapsFood =
+        food && food.x === newObstacle.x && food.y === newObstacle.y;
+      const overlapsObstacle = obstacles.some(
+        (obs) => obs.x === newObstacle.x && obs.y === newObstacle.y,
+      );
+
+      isValid = !overlapsSnake && !overlapsFood && !overlapsObstacle;
+    }
+
+    obstacles.push(newObstacle);
+  }
+}
+
+// ========================================
 // GAME LOGIC - Update game state each frame
 // ========================================
 // Process one game tick: move snake, check collisions, handle food
@@ -120,10 +160,16 @@ function updateGame() {
     return;
   }
 
+  // COLLISION CHECK 3: Obstacle collision (snake hit obstacle)
+  if (obstacles.some((obs) => obs.x === head.x && obs.y === head.y)) {
+    endGame(); // Game over!
+    return;
+  }
+
   // No collision - move snake by adding new head
   snake.unshift(head);
 
-  // COLLISION CHECK 3: Food collision
+  // COLLISION CHECK 4: Food collision
   if (head.x === food.x && head.y === food.y) {
     // Snake ate food - grow and gain points
     score += 10; // Add 10 points
@@ -160,6 +206,7 @@ function checkLevelUp() {
         updateGame(); // Run game logic
         drawGame(); // Render graphics
       }, 1000 / gameSpeed); // Time between frames based on speed
+      spawnObstacles(); // Spawn new obstacles for harder difficulty
     }
   }
 }
@@ -285,6 +332,26 @@ function drawGame() {
   ctx.strokeStyle = "#ff0000";
   ctx.lineWidth = 2;
   ctx.stroke(); // Draw outline
+
+  // Draw obstacles as dark gray squares
+  ctx.fillStyle = "#666666"; // Dark gray color
+  obstacles.forEach((obstacle) => {
+    ctx.fillRect(
+      obstacle.x * TILE_SIZE + 2,
+      obstacle.y * TILE_SIZE + 2,
+      TILE_SIZE - 4,
+      TILE_SIZE - 4,
+    );
+    // Draw border around obstacle
+    ctx.strokeStyle = "#999999";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(
+      obstacle.x * TILE_SIZE + 2,
+      obstacle.y * TILE_SIZE + 2,
+      TILE_SIZE - 4,
+      TILE_SIZE - 4,
+    );
+  });
 }
 
 // ========================================
@@ -358,7 +425,7 @@ function togglePause() {
 // Reset game to initial state
 function resetGame() {
   clearInterval(gameLoopId); // Stop game loop
-  initializeGame(); // Reset all variables
+  initializeGame(); // Reset all variables (includes spawning obstacles)
   drawGame(); // Render initial state
 
   // Reset button states
