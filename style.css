@@ -89,6 +89,66 @@ h1 {
     border-radius: 10px;
     cursor: pointer;
     /* Clickable for mobile controls */
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    aspect-ratio: 1;
+    touch-action: none;
+    /* Prevent browser default touch actions */
+}
+
+/* ====================================== 
+   TOUCH CONTROLS - Mobile direction buttons
+   ====================================== */
+.touch-controls {
+    display: none;
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: 20px auto;
+    aspect-ratio: 1;
+    grid-template-areas:
+        ". touch-up ."
+        "touch-left . touch-right"
+        ". touch-down .";
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5px;
+}
+
+.touch-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(102, 126, 234, 0.8);
+    color: white;
+    font-size: 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: all 0.1s ease;
+}
+
+.touch-area:active {
+    background: #667eea;
+    transform: scale(0.95);
+}
+
+.touch-up {
+    grid-area: touch-up;
+}
+
+.touch-down {
+    grid-area: touch-down;
+}
+
+.touch-left {
+    grid-area: touch-left;
+}
+
+.touch-right {
+    grid-area: touch-right;
 }
 
 /* ====================================== 
@@ -198,6 +258,102 @@ h1 {
 /* Hide modal by default */
 .modal.hidden {
     display: none;
+}
+
+/* ====================================== 
+   MOBILE RESPONSIVE STYLES
+   ====================================== */
+@media (max-width: 600px) {
+
+    /* Adjust container for mobile */
+    .container {
+        padding: 15px;
+        border-radius: 10px;
+        max-width: 95vw;
+    }
+
+    /* Reduce title size on mobile */
+    h1 {
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    /* Stack stats vertically or use grid */
+    .stats {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .stat-value {
+        font-size: 20px;
+    }
+
+    /* Show touch controls on mobile */
+    .touch-controls {
+        display: grid !important;
+    }
+
+    /* Hide instruction on tiny screens or make smaller */
+    .instruction {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    /* Make buttons bigger for touch */
+    .btn {
+        padding: 12px 16px;
+        font-size: 13px;
+        min-width: 80px;
+    }
+
+    .button-group {
+        gap: 8px;
+    }
+
+    /* Adjust modal for mobile */
+    .modal-content {
+        width: 90%;
+        padding: 20px;
+    }
+
+    .modal-content h2 {
+        font-size: 24px;
+    }
+
+    .modal-content p {
+        font-size: 16px;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 400px) {
+    .container {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+
+    .stats {
+        padding: 8px;
+    }
+
+    .stat-label {
+        font-size: 10px;
+    }
+
+    .stat-value {
+        font-size: 18px;
+    }
+
+    .btn {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+}
 }
 
 /* Modal content box */

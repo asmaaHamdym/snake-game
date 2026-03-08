@@ -30,13 +30,20 @@
             </div>
         </div>
 
-        <!-- Game canvas (400x400 pixel drawing area) -->
+        <!-- Game canvas (400x400 pixel drawing area) - responsive on mobile -->
         <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <!-- Mobile touch direction indicators -->
+        <div class="touch-controls" id="touchControls">
+            <div class="touch-area touch-up" id="touchUp">▲</div>
+            <div class="touch-area touch-left" id="touchLeft">◄</div>
+            <div class="touch-area touch-right" id="touchRight">►</div>
+            <div class="touch-area touch-down" id="touchDown">▼</div>
+        </div>
 
         <!-- Control section with instructions and buttons -->
         <div class="controls">
             <!-- Instructions for player -->
-            <p id="instruction" class="instruction">Use Arrow Keys to move - SPACEBAR to Start/Pause</p>
+            <p id="instruction" class="instruction">🖥️ Arrow Keys / SPACEBAR | 📱 Swipe or Tap Directions</p>
             <!-- Control buttons -->
             <div class="button-group">
                 <button id="startBtn" class="btn btn-primary">Start Game</button>

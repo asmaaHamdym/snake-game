@@ -861,6 +861,86 @@ canvas.addEventListener("click", (event) => {
 });
 
 // ========================================
+// MOBILE SWIPE GESTURE HANDLING
+// ========================================
+// Track touch start position for swipe detection
+let touchStartX = 0;
+let touchStartY = 0;
+
+// Listen for touch start
+canvas.addEventListener(
+  "touchstart",
+  (event) => {
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+  },
+  { passive: true },
+);
+
+// Listen for touch end and detect swipe direction
+canvas.addEventListener(
+  "touchend",
+  (event) => {
+    if (!gameRunning && event.changedTouches.length > 0) {
+      startGame(); // Start game on first touch if not running
+      return;
+    }
+
+    const touchEndX = event.changedTouches[0].clientX;
+    const touchEndY = event.changedTouches[0].clientY;
+
+    // Calculate swipe distance
+    const dx = touchEndX - touchStartX;
+    const dy = touchEndY - touchStartY;
+    const minSwipeDistance = 30; // Minimum distance to register as swipe
+
+    // Determine if swipe was horizontal or vertical
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > minSwipeDistance) {
+      // Horizontal swipe
+      if (dx > 0 && direction.x === 0)
+        nextDirection = { x: 1, y: 0 }; // Swipe right
+      else if (dx < 0 && direction.x === 0) nextDirection = { x: -1, y: 0 }; // Swipe left
+    } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > minSwipeDistance) {
+      // Vertical swipe
+      if (dy > 0 && direction.y === 0)
+        nextDirection = { x: 0, y: 1 }; // Swipe down
+      else if (dy < 0 && direction.y === 0) nextDirection = { x: 0, y: -1 }; // Swipe up
+    }
+  },
+  { passive: true },
+);
+
+// ========================================
+// TOUCH CONTROL BUTTONS (for mobile)
+// ========================================
+// Add event listeners to directional button controls
+const touchUp = document.getElementById("touchUp");
+const touchDown = document.getElementById("touchDown");
+const touchLeft = document.getElementById("touchLeft");
+const touchRight = document.getElementById("touchRight");
+
+if (touchUp) {
+  touchUp.addEventListener("click", () => {
+    if (direction.y === 0) nextDirection = { x: 0, y: -1 };
+  });
+}
+if (touchDown) {
+  touchDown.addEventListener("click", () => {
+    if (direction.y === 0) nextDirection = { x: 0, y: 1 };
+  });
+}
+if (touchLeft) {
+  touchLeft.addEventListener("click", () => {
+    if (direction.x === 0) nextDirection = { x: -1, y: 0 };
+  });
+}
+if (touchRight) {
+  touchRight.addEventListener("click", () => {
+    if (direction.x === 0) nextDirection = { x: 1, y: 0 };
+  });
+}
+
+// ========================================
 // PAGE INITIALIZATION
 // ========================================
 // Initialize game when page loads
