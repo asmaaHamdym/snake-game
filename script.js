@@ -199,11 +199,9 @@ function updateGame() {
   head.x += direction.x; // -1, 0, or 1 for left/none/right
   head.y += direction.y; // -1, 0, or 1 for up/none/down
 
-  // COLLISION CHECK 1: Wall collision (snake hit boundary)
-  if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
-    endGame(); // Game over!
-    return;
-  }
+  // COLLISION CHECK 1: Wrap snake around edges (classic Snake behavior)
+  head.x = (head.x + GRID_SIZE) % GRID_SIZE;
+  head.y = (head.y + GRID_SIZE) % GRID_SIZE;
 
   // COLLISION CHECK 2: Self collision (snake hit its own body)
   if (snake.some((segment) => segment.x === head.x && segment.y === head.y)) {
