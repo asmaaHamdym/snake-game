@@ -25,6 +25,7 @@ let direction = { x: 0, y: 0 }; // Current snake direction
 let nextDirection = { x: 0, y: 0 }; // Next direction (from player input)
 let gameLoopId = null; // ID of game loop interval
 let obstacles = []; // Array of obstacle positions {x, y}
+let animationFrame = 0; // Frame counter for animations
 
 // ========================================
 // DOM REFERENCES - Get HTML elements
@@ -60,6 +61,7 @@ function initializeGame() {
   gameSpeed = 5; // Start at speed 5
   direction = { x: 1, y: 0 }; // Start moving right
   nextDirection = { x: 1, y: 0 }; // Queue same direction
+  animationFrame = 0; // Reset animation for pulsing effects
 
   // Prepare game
   spawnFood(); // Place first food
@@ -216,6 +218,9 @@ function checkLevelUp() {
 // ========================================
 // Draw all game elements: snake, food, grid
 function drawGame() {
+  // Increment animation frame counter for pulsing effects
+  animationFrame++;
+
   // Fill entire canvas with black background
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
@@ -315,42 +320,158 @@ function drawGame() {
     }
   });
 
-  // Draw food as red circle
-  ctx.fillStyle = "#ff4444"; // Red-ish fill
+  // Draw food as a spider
+  const foodX = food.x * TILE_SIZE + TILE_SIZE / 2;
+  const foodY = food.y * TILE_SIZE + TILE_SIZE / 2;
+
+  // Draw outer glow effect for visibility
+  ctx.fillStyle = "rgba(200, 100, 0, 0.3)";
   ctx.beginPath();
-  // Draw circle at food location (center of tile)
-  ctx.arc(
-    food.x * TILE_SIZE + TILE_SIZE / 2, // Center X
-    food.y * TILE_SIZE + TILE_SIZE / 2, // Center Y
-    TILE_SIZE / 2 - 2, // Radius
-    0,
-    Math.PI * 2, // Full circle
-  );
-  ctx.fill(); // Fill circle
+  ctx.arc(foodX, foodY, 8, 0, Math.PI * 2);
+  ctx.fill();
 
-  // Draw bright red outline around food
-  ctx.strokeStyle = "#ff0000";
+  // Draw 8 spider legs - bright orange/tan
+  ctx.strokeStyle = "#dd8844";
   ctx.lineWidth = 2;
-  ctx.stroke(); // Draw outline
+  const legLength = 6;
+  const legAngles = [
+    0, // Right
+    Math.PI / 4, // Bottom-right
+    Math.PI / 2, // Down
+    (3 * Math.PI) / 4, // Bottom-left
+    Math.PI, // Left
+    (5 * Math.PI) / 4, // Top-left
+    (3 * Math.PI) / 2, // Up
+    (7 * Math.PI) / 4, // Top-right
+  ];
 
-  // Draw obstacles as dark gray squares
-  ctx.fillStyle = "#666666"; // Dark gray color
+  // Draw each of the 8 legs
+  legAngles.forEach((angle) => {
+    const legX = foodX + Math.cos(angle) * 3;
+    const legY = foodY + Math.sin(angle) * 3;
+    const endX = foodX + Math.cos(angle) * (3 + legLength);
+    const endY = foodY + Math.sin(angle) * (3 + legLength);
+
+    ctx.beginPath();
+    ctx.moveTo(legX, legY);
+    // Curved leg (spider legs bend)
+    const controlX = foodX + Math.cos(angle) * (3 + legLength / 2);
+    const controlY = foodY + Math.sin(angle) * (3 + legLength / 2) + 2;
+    ctx.quadraticCurveTo(controlX, controlY, endX, endY);
+    ctx.stroke();
+  });
+
+  // Draw abdomen (rear body) - larger circle - bright orange
+  ctx.fillStyle = "#ff9944";
+  ctx.beginPath();
+  ctx.arc(foodX, foodY + 1, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Draw abdomen shading/pattern
+  ctx.fillStyle = "#ff6622";
+  ctx.beginPath();
+  ctx.arc(foodX + 1, foodY + 2, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Draw abdomen highlights
+  ctx.fillStyle = "rgba(255, 200, 100, 0.6)";
+  ctx.beginPath();
+  ctx.arc(foodX - 1.5, foodY - 1, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Draw cephalothorax (front body/head) - smaller circle - darker orange
+  ctx.fillStyle = "#ff7722";
+  ctx.beginPath();
+  ctx.arc(foodX, foodY - 2, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Draw two eyes - bright yellow/green
+  ctx.fillStyle = "#ffff00";
+  ctx.beginPath();
+  ctx.arc(foodX - 1, foodY - 3, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(foodX + 1, foodY - 3, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eye pupils - black
+  ctx.fillStyle = "#000000";
+  ctx.beginPath();
+  ctx.arc(foodX - 1, foodY - 3, 0.6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(foodX + 1, foodY - 3, 0.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eye shine - bright
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(foodX - 0.6, foodY - 3.4, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(foodX + 1.4, foodY - 3.4, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ========================================
+  // OBSTACLE STYLE 5: BOMB/CIRCULAR WITH GRADIENT
+  // ========================================
+  // Draw obstacles as round bombs with glossy gradient effect
   obstacles.forEach((obstacle) => {
-    ctx.fillRect(
-      obstacle.x * TILE_SIZE + 2,
-      obstacle.y * TILE_SIZE + 2,
-      TILE_SIZE - 4,
-      TILE_SIZE - 4,
+    const centerX = obstacle.x * TILE_SIZE + TILE_SIZE / 2;
+    const centerY = obstacle.y * TILE_SIZE + TILE_SIZE / 2;
+    const radius = (TILE_SIZE - 4) / 2;
+
+    // Draw main bomb body with radial gradient (glossy sphere effect)
+    const gradient = ctx.createRadialGradient(
+      centerX - 2,
+      centerY - 2,
+      0,
+      centerX,
+      centerY,
+      radius,
     );
-    // Draw border around obstacle
-    ctx.strokeStyle = "#999999";
+    gradient.addColorStop(0, "#ff6666"); // Bright red in center
+    gradient.addColorStop(0.6, "#dd2222"); // Medium red middle
+    gradient.addColorStop(1, "#aa0000"); // Dark red edges
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw bright glossy highlight on top-left
+    ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+    ctx.beginPath();
+    ctx.arc(centerX - 3, centerY - 3, radius * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw secondary dimmer highlight
+    ctx.fillStyle = "rgba(255, 150, 150, 0.2)";
+    ctx.beginPath();
+    ctx.arc(centerX + 2, centerY - 2, radius * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw dark border with glow effect
+    ctx.strokeStyle = "#330000";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Draw outer glow ring
+    ctx.strokeStyle = "rgba(255, 68, 68, 0.5)";
     ctx.lineWidth = 1;
-    ctx.strokeRect(
-      obstacle.x * TILE_SIZE + 2,
-      obstacle.y * TILE_SIZE + 2,
-      TILE_SIZE - 4,
-      TILE_SIZE - 4,
-    );
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius + 2, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Add small "fuse" on top of bomb
+    ctx.strokeStyle = "#333333";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY - radius);
+    ctx.lineTo(centerX, centerY - radius - 3);
+    ctx.stroke();
   });
 }
 
