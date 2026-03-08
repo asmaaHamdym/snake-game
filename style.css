@@ -97,37 +97,19 @@ h1 {
     /* Prevent browser default touch actions */
 }
 
-/* ====================================== 
-   TOUCH CONTROLS - Mobile direction buttons
-   ====================================== */
-.touch-controls {
-    display: none;
-    position: relative;
-    width: 100%;
-    max-width: 400px;
-    margin: 20px auto;
-    aspect-ratio: 1;
-    grid-template-areas:
-        ". touch-up ."
-        "touch-left . touch-right"
-        ". touch-down .";
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 5px;
-}
-
 .touch-area {
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(102, 126, 234, 0.8);
     color: white;
-    font-size: 24px;
-    border-radius: 8px;
+    font-size: 12px;
+    border-radius: 4px;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
     transition: all 0.1s ease;
+    padding: 4px;
 }
 
 .touch-area:active {
@@ -260,6 +242,27 @@ h1 {
     display: none;
 }
 
+/* Modal content box */
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-content h2 {
+    margin-bottom: 20px;
+    color: #667eea;
+}
+
+.modal-content p {
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
 /* ====================================== 
    MOBILE RESPONSIVE STYLES
    ====================================== */
@@ -312,17 +315,28 @@ h1 {
     }
 
     /* Adjust modal for mobile */
+    .modal {
+        padding: 10px;
+    }
+
     .modal-content {
-        width: 90%;
+        width: 95%;
         padding: 20px;
+        max-height: 95vh;
     }
 
     .modal-content h2 {
-        font-size: 24px;
+        font-size: 22px;
+        margin-bottom: 15px;
     }
 
     .modal-content p {
-        font-size: 16px;
+        font-size: 15px;
+        margin-bottom: 10px;
+    }
+
+    .modal-content .btn {
+        margin-top: 10px;
     }
 }
 
